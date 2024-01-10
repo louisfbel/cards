@@ -53,6 +53,22 @@ char* get_suit(Suits suit) {
     };
 }
 
+// recursively frees each node in a linked list
+void freeNode(Stacked_card *n)
+{
+    // base case
+    if (n == NULL)
+    {
+        return;
+    }
+
+    // free next recursively
+    freeNode(n->next);
+
+    // Free current node
+    free(n);
+}
+
 // fill deck with cards
 void load() {
     // regular cards
@@ -76,10 +92,17 @@ void shuffle() {
         used[i] = 0;
     };
 
+    // reset stacked deck
+    freeNode(stack);
+    stack = NULL;
+
     // randomly order stacked deck
     for (int i = 0; i < DECK_SIZE; i ++) {
         // current card
-        Stacked_card current;
+        Stacked_card *new = malloc(sizeof(Stacked_card));
+        if (new == NULL) {
+            printf("ERROR: node issue");
+        };
 
         // generate random and find next open position
         int pos = rand() % DECK_SIZE;
@@ -89,9 +112,9 @@ void shuffle() {
 
         // place card at next open position in top of pile
         used[pos] = 1;
-        current.card = &deck[pos];
-        current.next = stack;
-        stack = &current;
+        new->card = &deck[pos];
+        new->next = stack;
+        stack = new;
     };
 };
 
@@ -103,8 +126,9 @@ int main() {
     load();
 
     // print deck
+    printf("Unshuffled deck:\n");
     for (int i = 0; i < DECK_SIZE; i ++){
-        // printf("%i of %s\n", deck[i].value, get_suit(deck[i].suit));
+        printf("%i of %s\n", deck[i].value, get_suit(deck[i].suit));
     };
 
     shuffle();
@@ -113,12 +137,16 @@ int main() {
     Stacked_card *current = stack;
 
     // print shuffled deck
+    printf("Shuffled deck:\n");
     for (int i = 0; i < DECK_SIZE; i ++) {
         printf("%i of %s\n", current->card->value, get_suit(current->card->suit));
 
         // get next card in stack
         current = current->next;
     };
+
+    // free every card in the stack.
+    freeNode(stack);
 
     return 0;
 };
